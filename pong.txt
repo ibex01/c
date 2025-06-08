@@ -106,7 +106,7 @@ int main()
     return 0;
 }
 
-
+------------------------------------------------------------------------------------------------------------------------------------
 bat.cpp
 
 #include "bat.h"
@@ -175,7 +175,7 @@ void Bat::update(Time dt)
     }
     m_Shape.setPosition(m_Position);
 }
-
+----------------------------------------------------------------------------------------------------------------------
 bat.h 
 
 #pragma once // Pragmatic information to the compiler no to read/open same header files after first time;
@@ -199,7 +199,7 @@ public:
     void stopLeft();
     void update(Time dt);
 };
-
+----------------------------------------------------------------------------------------------------------------------
 ball.cpp
 
 #include "ball.h"
@@ -245,7 +245,7 @@ void Ball::update(Time dt)
     // move the ball and bat
     m_Shape.setPosition(m_Position);
 }
-
+----------------------------------------------------------------------------------------------------------------------
 ball.h
 
 #pragma once
