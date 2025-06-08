@@ -1,0 +1,274 @@
+PONG.CPP
+
+#include "bat.h"
+#include "ball.h"
+#include <SFML/Graphics.hpp>
+#include <sstream>
+using namespace sf;
+int main()
+{
+    // Create videoMode
+    VideoMode vm(1366, 768);
+    // Create Window
+    RenderWindow window(vm, "Pong game", Style::Fullscreen);
+    // Create Bat
+    Bat bat(1366 / 2, 700);
+    // Create Ball
+    Ball ball(0, 0);
+    // Create hud -> (heads up display)
+    Text hud;
+    Font font;
+    font.loadFromFile("font/DS-DIGI.TTF");
+    hud.setFont(font);
+    hud.setCharacterSize(50);
+    hud.setFillColor(Color::White);
+    hud.setPosition(10, 10);
+    hud.setString("Score: 0 \nLives: 3");
+    hud.setStyle(Text::Bold);
+    hud.setOutlineThickness(2);
+    hud.setOutlineColor(Color::Black);
+    // Initial Value
+    int score = 0;
+    int lives = 3;
+    Clock clock;
+    while (window.isOpen())
+    {
+        // Event handling
+        Event event;
+
+        while (window.pollEvent(event))
+        {
+            if (event.type == Event::Closed)
+                window.close();
+        }
+        // Handel game
+        if (Keyboard::isKeyPressed(Keyboard::Escape))
+        {
+            window.close();
+        }
+        if (Keyboard::isKeyPressed(Keyboard::Left))
+        {
+            bat.stopRight();
+            bat.moveLeft();
+            if (bat.get_Position().left < 0)
+                bat.stopLeft();
+            else
+                bat.moveLeft();
+        }
+        if (Keyboard::isKeyPressed(Keyboard::Right))
+        {
+            bat.moveRight();
+            bat.stopLeft();
+            if (bat.get_Position().left + bat.get_Position().width > 1366)
+                bat.stopRight();
+        }
+        if (ball.get_Position().top > 770)
+        {
+            ball.reboundBottom();
+            lives--;
+            if (lives < 1)
+            {
+                score = 0;
+                // reset lives
+                lives = 3;
+            }
+        }
+
+        if (ball.get_Position().top < 0)
+            ball.reboundBatorTop();
+        if (ball.get_Position().left < 0)
+            ball.reboundSides();
+        if (ball.get_Position().left + ball.get_Position().width > 1366)
+            ball.reboundSides();
+        if (ball.get_Position().left >= bat.get_Position().left && ball.get_Position().left + ball.get_Position().width <= bat.get_Position().left + bat.get_Position().width &&
+            ball.get_Position().top + ball.get_Position().height >= bat.get_Position().top)
+        {
+            score++;
+            ball.reboundBatorTop();
+        }
+        // Update Time
+        Time dt = clock.restart();
+        // Update Bat
+        bat.update(dt);
+        // Update Ball
+        ball.update(dt);
+        // Update Score Message
+        std::stringstream ss;
+        ss << "Score: " << score << " Lives: " << lives;
+        hud.setString(ss.str());
+        // Draw
+        window.clear();
+        window.draw(hud);
+        window.draw(ball.getShape());
+        window.draw(bat.get_Shape());
+        window.display();
+    }
+    return 0;
+}
+
+
+bat.cpp
+
+#include "bat.h"
+using namespace sf;
+// Bat class constructor;
+Bat::Bat(float startX, float startY)
+{
+    m_Position.x = startX;
+    m_Position.y = startY;
+    m_Shape.setSize(Vector2f(200.0, 10.0));
+    m_Shape.setPosition(m_Position);
+}
+FloatRect Bat::get_Position()
+{
+    return m_Shape.getGlobalBounds();
+}
+RectangleShape Bat::get_Shape()
+{
+    return m_Shape;
+}
+void Bat::moveRight()
+{
+    m_MovingRight = true;
+}
+void Bat::moveLeft()
+{
+    m_MovingLeft = true;
+}
+void Bat::stopRight()
+{
+    m_MovingRight = false;
+}
+void Bat::stopLeft()
+{
+    m_MovingLeft = false;
+}
+void Bat::update(Time dt)
+{
+    if (m_MovingLeft)
+    {
+        m_Position.x -= m_Speed * dt.asSeconds();
+        if (m_Position.x < 0)
+            stopLeft();
+    }
+    if (m_MovingRight)
+    {
+        m_Position.x += m_Speed * dt.asSeconds();
+        if (m_Position.x > 1262)
+            stopRight();
+    }
+    m_Shape.setPosition(m_Position);
+}
+void Bat::update(Time dt)
+{
+    if (m_MovingLeft)
+    {
+        m_Position.x -= m_Speed * dt.asSeconds();
+        if (m_Position.x < 0)
+            stopLeft();
+    }
+    if (m_MovingRight)
+    {
+        m_Position.x += m_Speed * dt.asSeconds();
+        if (m_Position.x > 1262)
+            stopRight();
+    }
+    m_Shape.setPosition(m_Position);
+}
+
+bat.h 
+
+#pragma once // Pragmatic information to the compiler no to read/open same header files after first time;
+#include <SFML/Graphics.hpp>
+using namespace sf;
+class Bat
+{
+    Vector2f m_Position;
+    RectangleShape m_Shape;
+    float m_Speed = 400.0f;
+    bool m_MovingRight = false;
+    bool m_MovingLeft = false;
+
+public:
+    Bat(float startX, float startY);
+    FloatRect get_Position();
+    RectangleShape get_Shape();
+    void moveRight();
+    void moveLeft();
+    void stopRight();
+    void stopLeft();
+    void update(Time dt);
+};
+
+ball.cpp
+
+#include "ball.h"
+// this is the constructor function
+Ball::Ball(float startX, float startY)
+{
+    m_Position.x = startX;
+    m_Position.y = startY;
+    m_Shape.setRadius(10.0);
+    m_Shape.setPosition(m_Position);
+}
+FloatRect Ball::get_Position()
+{
+    return m_Shape.getGlobalBounds();
+}
+CircleShape Ball::getShape()
+{
+    return m_Shape;
+}
+float Ball::getXVelocity()
+{
+    return m_DirectionX;
+}
+void Ball::reboundSides()
+{
+    m_DirectionX = -m_DirectionX;
+}
+void Ball::reboundBatorTop()
+{
+    m_DirectionY = -m_DirectionY;
+}
+void Ball::reboundBottom()
+{
+    m_Position.y = 0;
+    m_Position.x = 400;
+    m_DirectionY = m_DirectionY;
+}
+void Ball::update(Time dt)
+{
+    // update the ball position variables
+    m_Position.y += m_DirectionY * m_Speed * dt.asSeconds();
+    m_Position.x += m_DirectionX * m_Speed * dt.asSeconds();
+    // move the ball and bat
+    m_Shape.setPosition(m_Position);
+}
+
+ball.h
+
+#pragma once
+#include <SFML/Graphics.hpp>
+using namespace sf;
+class Ball
+{
+private:
+    Vector2f m_Position;
+    CircleShape m_Shape;
+    float m_Speed = 1000.0f;
+    float m_DirectionX = .2f;
+    float m_DirectionY = .2f;
+
+public:
+    Ball(float startX, float startY);
+    FloatRect get_Position();
+    CircleShape getShape();
+    float getXVelocity();
+    void reboundSides();
+    void reboundBatorTop();
+    void reboundBottom();
+    void update(Time dt);
+};
+
+
